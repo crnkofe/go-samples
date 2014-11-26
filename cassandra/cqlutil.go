@@ -47,9 +47,7 @@ func ReadRows(cf string, key string) (Rows, error) {
 		return Rows{}, err
 	}
 	defer session.Close()
-	queryString := fmt.Sprintf(`SELECT * FROM "%s" WHERE key = '%s' LIMIT 1`, cf, key)
-
-	fmt.Println(queryString)
+	queryString := fmt.Sprintf(`SELECT * FROM "%s" WHERE key = '%s'`, cf, key)
 	iter := session.Query(queryString).Iter()
 	defer iter.Close()
 

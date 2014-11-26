@@ -34,7 +34,6 @@ func main() {
 		fmt.Println("Error while reading Cassandra row.")
 	}
 
-	fmt.Printf("%d", len(rows))
 	for _, row := range rows {
 		fmt.Println("{")
 		for k, v := range row {
