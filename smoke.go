@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/docopt/docopt-go"
+	"github.com/go-samples/cassandra"
 	"github.com/go-samples/files"
 )
 
@@ -27,4 +28,6 @@ func main() {
 	} else {
 		fmt.Println("No file passed as --input")
 	}
+
+	cassandra.ReadRow("test")
 }
