@@ -12,10 +12,11 @@ type CassandraConfig struct {
 	ColumnFamily string
 }
 
-func LoadConfig(filename string) CassandraConfig {
+func LoadConfig(filename string) (CassandraConfig, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		log.Fatal(err)
+		return CassandraConfig{}, err
 	}
 
 	decoder := json.NewDecoder(file)
@@ -23,6 +24,7 @@ func LoadConfig(filename string) CassandraConfig {
 	err = decoder.Decode(&config)
 	if err != nil {
 		log.Fatal(err)
+		return CassandraConfig{}, err
 	}
-	return config
+	return config, nil
 }
