@@ -29,7 +29,19 @@ func main() {
 		fmt.Println("No file passed as --input")
 	}
 
-	rows, err := cassandra.ReadRows("settings", "general_settings")
+	cols := []string{"key", "column1", "column2", "value"}
+	vals := cassandra.Dict{
+		"key":     "random",
+		"column1": 0,
+		"column2": "test2",
+		"value":   "Funky test!"}
+
+	err := cassandra.WriteRow("settings", cols, vals)
+	if err != nil {
+		fmt.Println("Error while inserting Cassandra row.")
+	}
+
+	rows, err := cassandra.ReadRows("settings", "random")
 	if err != nil {
 		fmt.Println("Error while reading Cassandra row.")
 	}

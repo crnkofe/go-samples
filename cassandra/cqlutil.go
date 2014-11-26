@@ -3,6 +3,8 @@ package cassandra
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/gocql/gocql"
 )
@@ -33,7 +35,6 @@ func setupConnection(configFile string) bool {
 			config.cassandraConfig = cassandraConfig
 		}
 	}
-
 	return true
 }
 
@@ -58,4 +59,42 @@ func ReadRows(cf string, key string) (Rows, error) {
 	}
 
 	return ret, nil
+}
+
+func WriteRow(cf string, columns []string, row Dict) error {
+	if !setupConnection("cassandra.config") {
+		return errors.New("cassandra: Invalid config or cluster unavailable.")
+	}
+
+	session, err := config.cluster.CreateSession()
+	if err != nil {
+		return err
+	}
+	defer session.Close()
+
+	values := make([]string, 0)
+	for _, column := range columns {
+		sval := fmt.Sprint(row[column])
+		if _, err := strconv.Atoi(sval); err == nil {
+			values = append(values, sval)
+		} else {
+			values = append(values, fmt.Sprintf(`'%s'`, sval))
+		}
+	}
+
+	columnsQueryStringPart := strings.Join(columns, ", ")
+	valuesQueryStringPart := strings.Join(values, ", ")
+
+	queryString := fmt.Sprintf(
+		`INSERT INTO "%s" (%s) VALUES (%s)`,
+		cf,
+		columnsQueryStringPart,
+		valuesQueryStringPart)
+	fmt.Println(queryString)
+	err = session.Query(queryString).Exec()
+	if err == nil {
+		return nil
+	} else {
+		return errors.New("cassandra: Could not insert row.")
+	}
 }
