@@ -2,8 +2,13 @@ package cassandra
 
 import (
 	"errors"
+	"fmt"
+
 	"github.com/gocql/gocql"
 )
+
+type Dict map[string]interface{}
+type Rows []Dict
 
 var config struct {
 	cassandraConfig CassandraConfig
@@ -32,39 +37,27 @@ func setupConnection(configFile string) bool {
 	return true
 }
 
-func ReadRow(key string) (string, error) {
+func ReadRows(cf string, key string) (Rows, error) {
 	if !setupConnection("cassandra.config") {
-		return "", errors.New("cassandra: Invalid config or cluster unavailable.")
+		return Rows{}, errors.New("cassandra: Invalid config or cluster unavailable.")
 	}
 
-	session, _ := config.cluster.CreateSession()
+	session, err := config.cluster.CreateSession()
+	if err != nil {
+		return Rows{}, err
+	}
 	defer session.Close()
+	queryString := fmt.Sprintf(`SELECT * FROM "%s" WHERE key = '%s' LIMIT 1`, cf, key)
 
-	/*
-		// insert a tweet
-		if err := session.Query(`INSERT INTO tweet (timeline, id, text) VALUES (?, ?, ?)`,
-			"me", gocql.TimeUUID(), "hello world").Exec(); err != nil {
-			log.Fatal(err)
-		}
+	fmt.Println(queryString)
+	iter := session.Query(queryString).Iter()
+	defer iter.Close()
 
-		var id gocql.UUID
-		var text string
+	ret := make(Rows, 0)
+	value := make(map[string]interface{})
+	for iter.MapScan(value) {
+		ret = append(ret, value)
+	}
 
-		if err := session.Query(`SELECT id, text FROM tweet WHERE timeline = ? LIMIT 1`,
-			"me").Consistency(gocql.One).Scan(&id, &text); err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println("Tweet:", id, text)
-
-		// list all tweets
-		iter := session.Query(`SELECT id, text FROM tweet WHERE timeline = ?`, "me").Iter()
-		for iter.Scan(&id, &text) {
-			fmt.Println("Tweet:", id, text)
-		}
-		if err := iter.Close(); err != nil {
-			log.Fatal(err)
-		}
-	*/
-
-	return "", nil
+	return ret, nil
 }

@@ -29,5 +29,17 @@ func main() {
 		fmt.Println("No file passed as --input")
 	}
 
-	cassandra.ReadRow("test")
+	rows, err := cassandra.ReadRows("settings", "general_settings")
+	if err != nil {
+		fmt.Println("Error while reading Cassandra row.")
+	}
+
+	fmt.Printf("%d", len(rows))
+	for _, row := range rows {
+		fmt.Println("{")
+		for k, v := range row {
+			fmt.Printf("%s: %s\n", k, v)
+		}
+		fmt.Println("}")
+	}
 }
