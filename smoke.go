@@ -1,8 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"github.com/docopt/docopt-go"
-	// "github.com/go-samples/files"
+	"github.com/go-samples/files"
 )
 
 func main() {
@@ -10,7 +11,7 @@ func main() {
 	usage := `GO Samples Smoke test.
 
 	Usage:
-  	  smoke -input <filename>
+  	  smoke --input <filename>
   	  smoke -h | --help
   	  smoke --version
 
@@ -20,10 +21,10 @@ func main() {
   	  --input		<FILENAME>`
 
 	arguments, _ := docopt.Parse(usage, nil, true, "GO Samples Smoke test", false)
-	_, ok := arguments["input"]
+	filename, ok := arguments["--input"]
 	if ok {
-		// read_output.ReadOutput(filename)
+		read_output.Cat(fmt.Sprint(filename))
 	} else {
-
+		fmt.Println("No file passed as --input")
 	}
 }
