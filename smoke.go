@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/docopt/docopt-go"
 	"github.com/go-samples/cassandra"
 	"github.com/go-samples/files"
@@ -37,6 +38,18 @@ func main() {
 		"value":   "Funky test!"}
 
 	err := cassandra.WriteRow("settings", cols, vals)
+	if err != nil {
+		fmt.Println("Error while inserting Cassandra row.")
+	}
+
+	cols = []string{"key", "column1", "column2", "value"}
+	s := cassandra.Setting{
+		Key:     "random",
+		Column1: 0,
+		Column2: "test2",
+		Value:   cassandra.SettingBlob{Test: "Funky test!"}}
+
+	err = cassandra.WriteSetting("settings", s)
 	if err != nil {
 		fmt.Println("Error while inserting Cassandra row.")
 	}

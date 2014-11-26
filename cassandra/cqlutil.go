@@ -1,6 +1,7 @@
 package cassandra
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -11,6 +12,17 @@ import (
 
 type Dict map[string]interface{}
 type Rows []Dict
+
+type SettingBlob struct {
+	Test string
+}
+
+type Setting struct {
+	Key     string
+	Column1 int
+	Column2 string
+	Value   SettingBlob
+}
 
 var config struct {
 	cassandraConfig CassandraConfig
@@ -92,6 +104,41 @@ func WriteRow(cf string, columns []string, row Dict) error {
 		valuesQueryStringPart)
 	fmt.Println(queryString)
 	err = session.Query(queryString).Exec()
+	if err == nil {
+		return nil
+	} else {
+		return errors.New("cassandra: Could not insert row.")
+	}
+}
+
+func WriteSetting(cf string, setting Setting) error {
+	if !setupConnection("cassandra.config") {
+		return errors.New("cassandra: Invalid config or cluster unavailable.")
+	}
+
+	session, err := config.cluster.CreateSession()
+	if err != nil {
+		return err
+	}
+	defer session.Close()
+
+	columns := []string{"key", "column1", "column2", "value"}
+	columnsPart := strings.Join(columns, `, `)
+	questionMarks := []string{"?", "?", "?", "?"}
+	questionMarksPart := strings.Join(questionMarks, `, `)
+
+	marshaledSettings, err := json.Marshal(setting.Value)
+
+	queryString := fmt.Sprintf("INSERT INTO \"%s\" (%s) VALUES (%s)",
+		cf,
+		columnsPart,
+		questionMarksPart)
+
+	err = session.Query(queryString,
+		setting.Key,
+		setting.Column1,
+		setting.Column2,
+		string(marshaledSettings)).Exec()
 	if err == nil {
 		return nil
 	} else {
