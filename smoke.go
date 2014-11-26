@@ -47,12 +47,16 @@ func main() {
 		Key:     "random",
 		Column1: 0,
 		Column2: "test2",
-		Value:   cassandra.SettingBlob{Test: "Funky test!"}}
+		Value:   cassandra.SettingBlob{Test: "Son of a gun!"}}
 
 	err = cassandra.WriteSetting("settings", s)
 	if err != nil {
 		fmt.Println("Error while inserting Cassandra row.")
 	}
+
+	redSetting, err := cassandra.ReadSetting("settings", "random")
+	fmt.Println("Deserialized setting:")
+	fmt.Println(redSetting[0].Test)
 
 	rows, err := cassandra.ReadRows("settings", "random")
 	if err != nil {

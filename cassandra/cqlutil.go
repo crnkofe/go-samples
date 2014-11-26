@@ -111,6 +111,34 @@ func WriteRow(cf string, columns []string, row Dict) error {
 	}
 }
 
+func ReadSetting(cf string, key string) ([]SettingBlob, error) {
+	if !setupConnection("cassandra.config") {
+		return []SettingBlob{}, errors.New("cassandra: Invalid config or cluster unavailable.")
+	}
+
+	session, err := config.cluster.CreateSession()
+	if err != nil {
+		return []SettingBlob{}, err
+	}
+	defer session.Close()
+	queryString := fmt.Sprintf(`SELECT * FROM "%s" WHERE key = '%s'`, cf, key)
+	iter := session.Query(queryString).Iter()
+	defer iter.Close()
+
+	ret := make([]SettingBlob, 0)
+	result := make(map[string]interface{})
+	for iter.MapScan(result) {
+		settingBlob := SettingBlob{}
+		byteValue := []byte(fmt.Sprint(result["value"]))
+		err := json.Unmarshal(byteValue, &settingBlob)
+		if err == nil {
+			ret = append(ret, settingBlob)
+		}
+	}
+
+	return ret, nil
+}
+
 func WriteSetting(cf string, setting Setting) error {
 	if !setupConnection("cassandra.config") {
 		return errors.New("cassandra: Invalid config or cluster unavailable.")
